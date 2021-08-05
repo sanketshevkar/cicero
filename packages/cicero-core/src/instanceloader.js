@@ -40,7 +40,7 @@ class InstanceLoader extends FileLoader {
      * @param {object} data - the contract data
      * @return {object} - the contract instance
      */
-    static fromTemplateWithData(Instance, template, data) {
+     static async fromTemplateWithData(Instance, template, data, contractPath) {
         const metadata = InstanceMetadata.createMetadataFromTemplate(template.getMetadata());
         const logicManager = template.getLogicManager();
         const grammar = template.getParserManager().getTemplate();
@@ -56,6 +56,39 @@ class InstanceLoader extends FileLoader {
         ));
 
         instance.setData(data);
+        return instance;
+    }
+
+    /**
+     * Create an instance from a Template and data.
+     * @param {*} Instance - the type to construct
+     * @param {Template} template  - the template for the instance
+     * @param {object} data - the contract data
+     * @return {object} - the contract instance
+     */
+     static async fromDirectory(Instance, template, data, contractPath) {
+        const metadata = InstanceMetadata.createMetadataFromTemplate(template.getMetadata());
+        const logicManager = template.getLogicManager();
+        const grammar = template.getParserManager().getTemplate();
+
+        // create the instance
+        const instance = new (Function.prototype.bind.call(
+            Instance,
+            null,
+            metadata,
+            logicManager,
+            grammar,
+            template,
+        ));
+
+        instance.setData(data);
+
+        // grab the signatures
+        const signatureFiles = await InstanceLoader.loadFilesContents(contractPath, /signatures[/\\].*\.json$/);
+        signatureFiles.forEach((signatureFile) => {
+            let signature = JSON.parse(signatureFile.contents)
+            instance.contractSignatures.push(signature);
+        });
         return instance;
     }
 

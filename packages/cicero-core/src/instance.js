@@ -65,6 +65,7 @@ class Instance {
 
         this.data = null;
         this.concertoData = null;
+        this.contractSignatures = [];
 
         // Initialize the parser
         Util.initParser(
