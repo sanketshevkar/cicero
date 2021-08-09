@@ -667,7 +667,6 @@ class Commands {
 
         return Commands.loadTemplate(templatePath, options)
             .then(async (template) => {
-                console.log(dataJson);
                 const instance = await ContractInstance.fromTemplateWithData(template, dataJson);
                 const archive = await instance.toSlc(target);
                 let file;

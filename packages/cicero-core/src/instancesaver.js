@@ -17,7 +17,7 @@
 const fsPath = require('path');
 const JSZip = require('jszip');
 const TemplateSaver = require('./templatesaver');
-const Util = require('./util');
+const Util  = require('./util');
 
 /**
  * A utility to persist instances to data sources.
@@ -88,68 +88,65 @@ class InstanceSaver {
         });
     }
 
-    // /**
-    //  * Persists this instance to a Smart Legal Contract (slc) file.
-    //  * @param {Instance} instance - the instance to persist
-    //  * @param {string} [runtime] - target runtime for the archive
-    //  * @param {Object} [options] - JSZip options
-    //  * @return {Promise<Buffer>} the zlib buffer
-    //  */
-    //  static async toSlc(instance, runtime, templateArchive, options) {
-    //     if(!runtime || typeof(runtime) !== 'string') {
-    //         throw new Error('runtime is required and must be a string');
-    //     }
+    /**
+     * Persists this instance to a Smart Legal Contract (slc) file.
+     * @param {Instance} instance - the instance to persist
+     * @param {string} [runtime] - target runtime for the archive
+     * @param {Object} [options] - JSZip options
+     * @return {Promise<Buffer>} the zlib buffer
+     */
+     static async toSlc(instance, runtime, templateArchive, options) {
+        if(!runtime || typeof(runtime) !== 'string') {
+            throw new Error('runtime is required and must be a string');
+        }
+        const contractModel = Util.getContractModel(instance.logicManager, instance.instanceKind);
+        const properties = contractModel.getProperties();
+        const prop = properties.filter((property) => property.getDecorators().map((decorator) => decorator.getName() === 'ContractParty'));
 
-    //     let zip = new JSZip();
+        let zip = new JSZip();
 
-    //     // save the metadata
-    //     const metadata = instance.getMetadata().createTargetMetadata(runtime);
+        // save the metadata
+        const metadata = instance.getMetadata().createTargetMetadata(runtime);
 
-    //     // get template name
-    //     const templateName = metadata.getPackageJson().name;
+        // get template name
+        const templateName = metadata.getPackageJson().name;
 
-    //     let packageFileContents = JSON.stringify(metadata.getPackageJson());
+        let packageFileContents = JSON.stringify(metadata.getPackageJson());
 
-    //     zip.file('package.json', packageFileContents, options);
+        zip.file('package.json', packageFileContents, options);
 
-    //     // save the contract data
-    //     const dataContents = JSON.stringify(instance.getData());
+        // save the contract data
+        const dataContents = JSON.stringify(instance.getData());
 
-    //     // save the grammar
-    //     zip.file('contract/', null, Object.assign({}, options, {
-    //         dir: true
-    //     }));
+        // save the grammar
+        zip.file('contract/', null, Object.assign({}, options, {
+            dir: true
+        }));
 
-    //     zip.file('contract/contract.json', dataContents, options);
+        zip.file('contract/contract.json', dataContents, options);
 
-    //     zip.file(`templates/`, null, Object.assign({}, options, {
-    //         dir: true
-    //     }));
+        zip.file(`templates/`, null, Object.assign({}, options, {
+            dir: true
+        }));
 
-    //     zip.file(`templates/${templateName}.cta`, templateArchive, options);
+        zip.file(`templates/${templateName}.cta`, templateArchive, options);
 
-    //     let signatures = instance.contractSignatures;
-    //     zip.file('signatures/', null, Object.assign({}, options, {
-    //         dir: true
-    //     }));
-    //     signatures.forEach(function (signatureObject) {
-    //         let signature = JSON.stringify(signatureObject);
-    //         zip.file(`signatures/${signatureObject.signatory}.json`, signature, options);
-    //     });
+        let signatures = instance.contractSignatures;
+        zip.file('signatures/', null, Object.assign({}, options, {
+            dir: true
+        }));
+        signatures.forEach(function (signatureObject) {
+            let signature = JSON.stringify(signatureObject);
+            zip.file(`signatures/${signatureObject.signatory}.json`, signature, options);
+        });
 
-    //     return zip.generateAsync({
-    //         type: 'nodebuffer'
-    //     }).then(something => {
-    //         return Promise.resolve(something).then(result => {
-    //             return result;
-    //         });
-    //     });
-    // }
-
-    static async toSlc(instance, runtime, templateArchive, options) {
-        const contractModel = Util.getContractModel(instance.logicManager, instance.contract);
-        console.log(contractModel);
-
+        return zip.generateAsync({
+            type: 'nodebuffer'
+        }).then(something => {
+            return Promise.resolve(something).then(result => {
+                return result;
+            });
+        });
     }
 }
 
