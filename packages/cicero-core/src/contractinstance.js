@@ -56,8 +56,12 @@ class ContractInstance extends Instance {
      * @param {object} data - the contract data
      * @return {object} - the clause instance
      */
-     static async fromDirectory(template, data, contractPath) {
-        return await InstanceLoader.fromDirectory(ContractInstance, template, data, contractPath);
+    static async fromDirectory(template, data, contractPath) {
+        const instance = await InstanceLoader.fromDirectory(ContractInstance, template, data, contractPath);
+        if (instance.contractSignatures.length !== 0) {
+            instance.verifySignatures();
+        }
+        return instance;
     }
 
     /**
@@ -83,18 +87,18 @@ class ContractInstance extends Instance {
 
     /**
      * Verify the signatures of the parties/individuals who signed the contract
-     * @param {boolean} standaloneVerify - true if function is called only for verification process and not verification before signing
      * @return {boolean} true if all signatures are valid
      */
-    verifySignatures(standaloneVerify) {
-        if(standaloneVerify){
-            if (this.contractSignatures.length === 0) {throw new Error('The contract is not signed by any party/individual.');}
-        }
-        this.contractSignatures.forEach((contractSignature)=>{
-            const { signatory, contractHash, timestamp, signatoryCert, signature } = contractSignature;
-            this.verify(signature, timestamp, signatoryCert);
-        });
-        return true;  
+    verifySignatures() {
+        if(this.contractSignatures.length > 0){
+            this.contractSignatures.forEach((contractSignature)=>{
+                const { signatory, contractHash, timestamp, signatoryCert, signature } = contractSignature;
+                this.verify(signature, timestamp, signatoryCert);
+            });
+            return true;
+        } else {
+            throw new Error('The contract is not signed by any party/individual.');
+        }   
     }
 
     /**
@@ -144,7 +148,9 @@ class ContractInstance extends Instance {
      * @return {Promise<ContractInstance>} a Promise to the instance
      */
     async signContract(p12File, passphrase, signatory) {
-        this.verifySignatures();
+        if (this.contractSignatures.length !== 0 ) {
+            this.verifySignatures();
+        }
         const timestamp = Date.now();
         this.sign(p12File, passphrase, timestamp, signatory);
         return await this.toSlc('ergo');
