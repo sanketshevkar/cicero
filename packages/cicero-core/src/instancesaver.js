@@ -101,7 +101,13 @@ class InstanceSaver {
         }
         const contractModel = Util.getContractModel(instance.logicManager, instance.instanceKind);
         const properties = contractModel.getProperties();
-        const prop = properties.filter((property) => property.getDecorators().map((decorator) => decorator.getName() === 'ContractParty'));
+        properties.map((property) => property.getDecorators().map((decorator) => {
+            if (decorator.getName() === 'ContractParty') {
+                const data = instance.data;
+                const partyName = data[property.name];
+                instance.contractSignatures.push({signatory: partyName});
+            }
+        }));
 
         let zip = new JSZip();
 
