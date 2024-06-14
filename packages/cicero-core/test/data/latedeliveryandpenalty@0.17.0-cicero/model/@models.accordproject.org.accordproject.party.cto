@@ -11,3 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+concerto version ">= 1.0.0"
+
+namespace org.accordproject.party
+
+/* A party to a contract */
+participant Party identified by partyId {
+  o String partyId
+}
